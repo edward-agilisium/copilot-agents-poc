@@ -1,9 +1,12 @@
 import os
 import json
 import boto3
-from fastapi import APIRouter, Body
+from fastapi import APIRouter
+from pydantic import BaseModel
+from typing import List, Optional
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
+from services.qdrant_filters import build_qdrant_filter
 
 router = APIRouter()
 
@@ -37,13 +40,26 @@ def create_embedding(text):
     result = json.loads(response["body"].read())
     return result["embedding"]
 
+class AskRequest(BaseModel):
+    question: str
+    search_mode: Optional[str] = "🎯 Contextual Search"
+    target_files: Optional[List[str]] = []
+
 @router.post("/ask")
-async def ask_question(question: str = Body(...)):
+async def ask_question(request: AskRequest):
+    question = request.question
+    search_mode = request.search_mode
+    target_files = request.target_files
 
     query_embedding = create_embedding(question)
+    
+    # Apply dynamic filtering if in Contextual Search mode
+    qdrant_filter = build_qdrant_filter(search_mode, target_files)
+    
     results = qdrant.query_points(
         collection_name=COLLECTION_NAME,
         query=query_embedding,
+        query_filter=qdrant_filter,
         limit=5
     ).points
 
@@ -67,8 +83,7 @@ You are a helpful assistant.
 
 First, answer the question using the context provided.
 
-Then, if the context is limited, provide a general explanation based on your knowledge.
-
+Then, if the context is limited or unknow directly tell data is not available for your query
 Context:
 {context_text}
 

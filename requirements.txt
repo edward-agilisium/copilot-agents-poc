@@ -40,3 +40,4 @@ pypdf
 python-docx
 python-pptx
 python-multipart
+streamlit 
