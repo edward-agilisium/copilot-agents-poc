@@ -77,26 +77,31 @@ async def ask_question(request: AskRequest):
         })
 
     context_text = "\n\n".join(contexts)
+      
+    prompt = f"""You are an expert Enterprise Copilot Agent. Your primary task is to answer the user's question based strictly on the provided document context.
 
-    prompt = f"""
-You are a helpful assistant.
-
-First, answer the question using the context provided.
-
-Then, if the context is limited or unknow directly tell data is not available for your query
-Context:
+Here is the extracted document context:
+<context>
 {context_text}
+</context>
 
-Question:
+Here is the user's question:
+<question>
 {question}
+</question>
 
-Respond in this format:
+Follow these strict rules:
+1. First, analyze the <context>. If the answer is present, provide a clear, professional response based ONLY on those documents.
+2. If the <context> does not contain the information needed, you MUST explicitly state: "The provided documents do not contain the answer to this query." Do not hallucinate or guess document contents.
+3. If you have general knowledge that might be helpful, provide it in the additional explanation section, but make it very clear that it is not from the uploaded files.
 
-Answer from document:
-<answer based on context>
+Format your response EXACTLY like this using Markdown:
 
-Additional explanation:
-<general explanation>
+### 📄 Answer from Document
+<Your strictly context-based answer here, or the data unavailable message>
+
+### 💡 Additional Explanation
+<Your general knowledge or helpful context here>
 """
 
     response = bedrock.invoke_model(
@@ -106,9 +111,41 @@ Additional explanation:
             "messages": [
                 {"role": "user", "content": prompt}
             ],
-            "max_tokens": 500
+            "max_tokens": 800, # Increased slightly to allow for formatting
+            "temperature": 0.1 # Keep this very low so it doesn't hallucinate answers
         })
     )
+#     prompt = f"""
+# You are a helpful assistant.
+
+# First, answer the question using the context provided.
+
+# Then, if the context is limited or unknow directly tell data is not available for your query
+# Context:
+# {context_text}
+
+# Question:
+# {question}
+
+# Respond in this format:
+
+# Answer from document:
+# <answer based on context>
+
+# Additional explanation:
+# <general explanation>
+# """
+
+#     response = bedrock.invoke_model(
+#         modelId="anthropic.claude-3-sonnet-20240229-v1:0",
+#         body=json.dumps({
+#             "anthropic_version": "bedrock-2023-05-31",
+#             "messages": [
+#                 {"role": "user", "content": prompt}
+#             ],
+#             "max_tokens": 500
+#         })
+#     )
 
     result = json.loads(response["body"].read())
 
