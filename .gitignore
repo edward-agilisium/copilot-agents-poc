@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Env
+venv/
+.env/
+
+# Environment variables
+# .env
+
+# Database
+*.db
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# Large files
+*.pdf
+*.pptx
+*.docx
+
+# IDE
+.vscode/
+.idea/
+
