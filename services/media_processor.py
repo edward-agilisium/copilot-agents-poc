@@ -1,6 +1,6 @@
 import os
 from faster_whisper import WhisperModel
-from moviepy.editor import VideoFileClip
+from moviepy import VideoFileClip
 
 # 1. OPTIMIZATION: Use 'small.en' (English-only) for high accuracy and speed on Mac M2
 print("Loading Optimized English Whisper Model...")
@@ -13,7 +13,7 @@ def extract_audio_from_video(video_path: str, output_audio_path: str) -> str:
     print(f"🎬 Extracting audio from video: {video_path}")
     try:
         video = VideoFileClip(video_path)
-        video.audio.write_audiofile(output_audio_path, logger=None)
+        video.audio.write_audiofile(output_audio_path)
         video.close()
         print("✅ Audio extraction complete.")
         return output_audio_path

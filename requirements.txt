@@ -33,3 +33,10 @@ aiofiles
 msgraph-sdk
 faster-whisper 
 moviepy
+fastapi
+boto3
+qdrant-client
+pypdf
+python-docx
+python-pptx
+python-multipart
