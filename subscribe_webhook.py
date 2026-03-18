@@ -1,18 +1,27 @@
 import asyncio
+import os
+import sys
 import httpx
 from datetime import datetime, timedelta, timezone
 from azure.identity.aio import ClientSecretCredential
+from dotenv import load_dotenv
 
-# --- YOUR CREDENTIALS ---
-TENANT_ID = "b8869792-ee44-4a05-a4fb-b6323a34ca35"
-CLIENT_ID = "916271d2-fd1a-4d18-bae2-47e47c8bd374" 
-CLIENT_SECRET = "a1f8Q~q0chgSmBgoquRnNwd6jTmyMtU5MWRqsdl2"
+load_dotenv()
 
-# The Copilot-agent POC Drive ID we fetched earlier
-DRIVE_ID = "b!ygJov5ls0kib7ngKA6TXAcWpraEho8ZMlOdmBY4JmJsEBxinGmiTT6-BBfcF8FDy"
+TENANT_ID = os.getenv("TENANT_ID")
+CLIENT_ID = os.getenv("CLIENT_ID")
+CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+DRIVE_ID = os.getenv("DRIVE_ID")
 
+# Accept tunnel URL from: (1) CLI argument, (2) env var, (3) error
+TUNNEL_URL = sys.argv[1] if len(sys.argv) > 1 else os.getenv("TUNNEL_URL")
+if not TUNNEL_URL:
+    print("❌ No tunnel URL provided. Pass as argument or set TUNNEL_URL env var.")
+    sys.exit(1)
 
-NGROK_URL = "https://kelly-noncadenced-phylis.ngrok-free.dev/webhook"
+# Ensure URL ends with /webhook path
+if not TUNNEL_URL.endswith("/webhook"):
+    TUNNEL_URL = TUNNEL_URL.rstrip("/") + "/webhook"
 
 async def create_subscription():
     print("Authenticating with Azure AD...")
@@ -29,12 +38,12 @@ async def create_subscription():
     
     payload = {
         "changeType": "updated", # As we discovered, SharePoint Drives require 'updated'
-        "notificationUrl": NGROK_URL, 
+        "notificationUrl": TUNNEL_URL, 
         "resource": f"/drives/{DRIVE_ID}/root",
         "expirationDateTime": expiration
     }
 
-    print(f"Sending subscription request to MS Graph for {NGROK_URL}...")
+    print(f"Sending subscription request to MS Graph for {TUNNEL_URL}...")
     async with httpx.AsyncClient(timeout=20.0) as client:
         response = await client.post(
             "https://graph.microsoft.com/v1.0/subscriptions", 

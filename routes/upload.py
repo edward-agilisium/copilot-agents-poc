@@ -41,7 +41,8 @@ COLLECTION_NAME = "CopilotAgentDocs"
 
 qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API, timeout=60)
 
-session = boto3.Session(profile_name="cognitive")
+AWS_PROFILE = os.getenv("AWS_PROFILE")
+session = boto3.Session(profile_name=AWS_PROFILE)
 bedrock = session.client("bedrock-runtime", region_name="us-west-2")
 
 # ==============================
