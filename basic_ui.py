@@ -112,7 +112,7 @@ with st.sidebar:
             
     st.divider()
     
-    # --- UPLOAD SECTION ---
+    # --- UPLOAD SECTION (Optimized for Webhook Handoff) ---
     with st.expander("📤 Upload Document", expanded=False):
         uploaded_file = st.file_uploader(
             "Upload a new file to the knowledge base",
@@ -122,18 +122,27 @@ with st.sidebar:
         )
         if uploaded_file is not None:
             if st.button("Start Upload", use_container_width=True):
-                with st.spinner(f"Uploading and processing {uploaded_file.name}..."):
+                # Change 1: Update the spinner text to reflect 'Storage' only
+                with st.spinner(f"Storing {uploaded_file.name} in SharePoint..."):
                     try:
                         files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
                         data = {"uploaded_by": "Streamlit User"}
                         
-                        # Set a high timeout because embedding and chunking large videos takes time
-                        resp = httpx.post(f"{API_URL}/upload", data=data, files=files, timeout=300.0)
+                        # Change 2: Reduced timeout (60s is plenty for just storage)
+                        resp = httpx.post(f"{API_URL}/upload", data=data, files=files, timeout=60.0)
                         resp.raise_for_status()
                         
-                        st.success("✅ Upload complete!")
+                        # Change 3: Informative Success Messages
+                        st.success(f"✅ {uploaded_file.name} is now in SharePoint!")
+                        st.info("🤖 Our Agent is now indexing this in the background. It will be searchable in a few moments.")
+                        
+                        # Add a sleek toast notification
+                        st.toast("Background Indexing Started", icon="🚀")
+                        
+                        # Reset the uploader
                         st.session_state.uploader_key += 1
                         st.rerun()
+                        
                     except Exception as e:
                         st.error(f"Upload failed: {str(e)}")
                         

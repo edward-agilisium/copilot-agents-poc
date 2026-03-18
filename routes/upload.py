@@ -66,11 +66,26 @@ async def get_token():
 # SHAREPOINT LARGE FILE UPLOAD
 # ==============================
 
-async def upload_large_file(token, filename, file_bytes):
-    print(f"📡 Creating upload session for {filename}...")
-    create_session_url = f"https://graph.microsoft.com/v1.0/drives/{DRIVE_ID}/root:/{filename}:/createUploadSession"
-    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+async def upload_large_file(token, filename, file_bytes, folder_id="root"):
+    """
+    Uploads a file to a specific SharePoint folder using a chunked session.
+    """
+    print(f"📡 Creating upload session for {filename} in folder {folder_id}...")
 
+    # 1. DYNAMIC URL LOGIC
+    # If folder_id is 'root', we use the root shortcut.
+    # Otherwise, we use the items/{id} path which works for any subfolder.
+    if folder_id == "root":
+        create_session_url = f"https://graph.microsoft.com/v1.0/drives/{DRIVE_ID}/root:/{filename}:/createUploadSession"
+    else:
+        create_session_url = f"https://graph.microsoft.com/v1.0/drives/{DRIVE_ID}/items/{folder_id}:/{filename}:/createUploadSession"
+
+    headers = {
+        "Authorization": f"Bearer {token}", 
+        "Content-Type": "application/json"
+    }
+
+    # 2. CREATE SESSION
     async with httpx.AsyncClient(timeout=120.0) as client:
         session_res = await client.post(create_session_url, headers=headers)
         session_res.raise_for_status()
@@ -79,7 +94,8 @@ async def upload_large_file(token, filename, file_bytes):
     chunk_size = 5 * 1024 * 1024  # 5MB
     file_size = len(file_bytes)
 
-    print("🚀 Uploading in chunks...")
+    # 3. CHUNKED UPLOAD
+    print(f"🚀 Uploading {filename} in chunks...")
     async with httpx.AsyncClient(timeout=120.0) as client:
         for start in range(0, file_size, chunk_size):
             end = min(start + chunk_size, file_size) - 1
@@ -88,11 +104,12 @@ async def upload_large_file(token, filename, file_bytes):
                 "Content-Length": str(len(chunk)),
                 "Content-Range": f"bytes {start}-{end}/{file_size}"
             }
-            print(f"📦 Uploading bytes {start}-{end}")
+            # Log progress for your Mac terminal
+            print(f"📦 [{filename}] Uploading bytes {start}-{end}...")
             response = await client.put(upload_url, headers=headers, content=chunk)
             response.raise_for_status()
 
-    print("✅ Upload completed")
+    print(f"✅ Upload completed for {filename}")
     return response.json()
 
 # ==============================
@@ -196,19 +213,25 @@ async def process_file_for_qdrant(file_bytes: bytes, filename: str, sharepoint_u
 # ==============================
 
 @router.post("/upload")
-async def upload_file(file: UploadFile = File(...), uploaded_by: str = "unknown"):
+async def upload_file(file: UploadFile = File(...), folder_id: str = "root"):
+    """
+    Now targets the specific folder selected in Streamlit.
+    """
     file_bytes = await file.read()
+    filename = file.filename
 
-    # 1️⃣ Upload to SharePoint (chunked)
     token = await get_token()
-    sp_response = await upload_large_file(token, file.filename, file_bytes)
-    sharepoint_url = sp_response.get("webUrl")
-
-    # 2️⃣ Pass to core engine
-    result = await process_file_for_qdrant(file_bytes, file.filename, sharepoint_url, uploaded_by)
-    result["file_url"] = sharepoint_url
-    return result
-
+    
+    # Pass the folder_id into your helper function
+    print(f"📤 [UI UPLOAD] Storing {filename} in SharePoint folder: {folder_id}...")
+    sp_response = await upload_large_file(token, filename, file_bytes, folder_id)
+    
+    return {
+        "status": "stored",
+        "filename": filename,
+        "message": "File stored in SharePoint. Background indexing started.",
+        "sharepoint_url": sp_response.get("webUrl")
+    }
 # ==============================
 # WEBHOOK LISTENER ROUTE (DELTA SYNC)
 # ==============================
@@ -247,10 +270,12 @@ async def sync_sharepoint_changes():
                 print("✅ [READY] Baseline established. Watching all folders...")
                 return
 
-            # 3. Fetching New Changes (Recursive by nature)
+            # 3. Fetching New Changes
             async with httpx.AsyncClient(timeout=60.0) as client:
-                print("🔍 [SCANNING] Checking for new uploads across SharePoint...")
+                print("🔍 [SCANNING] Checking for new uploads...")
                 new_files = []
+                # Add this: track IDs we've already seen in this batch
+                processed_ids = set() 
                 
                 while list_url:
                     res = await client.get(list_url, headers=headers)
@@ -258,28 +283,28 @@ async def sync_sharepoint_changes():
                     data = res.json()
                     
                     for item in data.get("value", []):
-                        # This catches files in ANY folder (root, astra, uploads, etc.)
-                        if "folder" not in item and "deleted" not in item and "file" in item:
-                            new_files.append(item)
+                        file_id = item.get("id")
+                        
+                        # Only add if it's a file AND we haven't seen this ID yet
+                        if "file" in item and "folder" not in item and "deleted" not in item:
+                            if file_id not in processed_ids:
+                                new_files.append(item)
+                                processed_ids.add(file_id) # Mark as seen
                     
                     if "@odata.nextLink" in data:
                         list_url = data["@odata.nextLink"]
                     elif "@odata.deltaLink" in data:
-                        # Save bookmark for next time
-                        next_delta = data["@odata.deltaLink"]
                         with open(DELTA_TOKEN_FILE, 'w') as f:
-                            f.write(next_delta)
+                            f.write(data["@odata.deltaLink"])
                         break
                     else:
                         break
 
                 if not new_files:
-                    print("🏁 [DONE] No new files to process.")
+                    print("✅ No new files found.")
                     return
 
-                # Sort oldest to newest
-                new_files.sort(key=lambda x: x.get("lastModifiedDateTime", ""))
-                print(f"📥 [BATCH] Found {len(new_files)} new file(s).")
+                # Proceed to your Step 4 loop...
 
                 # 4. Sequential Processing & Status Reporting
                 for file_item in new_files:
