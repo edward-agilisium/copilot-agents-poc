@@ -78,30 +78,30 @@ async def ask_question(request: AskRequest):
 
     context_text = "\n\n".join(contexts)
       
-    prompt = f"""You are an expert Enterprise Copilot Agent. Your primary task is to answer the user's question based strictly on the provided document context.
+    prompt = f"""You are an expert Enterprise Copilot Agent. Your goal is to help the user by synthesizing information from the provided document context.
 
-Here is the extracted document context:
+Extracted Document Context:
 <context>
 {context_text}
 </context>
 
-Here is the user's question:
+User Question:
 <question>
 {question}
 </question>
 
-Follow these strict rules:
-1. First, analyze the <context>. If the answer is present, provide a clear, professional response based ONLY on those documents.
-2. If the <context> does not contain the information needed, you MUST explicitly state: "The provided documents do not contain the answer to this query." Do not hallucinate or guess document contents.
-3. If you have general knowledge that might be helpful, provide it in the additional explanation section, but make it very clear that it is not from the uploaded files.
+Instructions:
+1. **Analyze the Context:** Provide a helpful, professional answer. While you should prioritize information found in the <context>, you may make reasonable inferences or summarize related points if the exact answer isn't explicitly stated but the information is present.
+2. **Handle Missing Info:** If the <context> truly offers no relevant information, mention that the documents don't directly address the query, but try to provide the closest possible context from the files.
+3. **Be Concise:** Ensure your responses are direct and avoid unnecessary filler.
 
-Format your response EXACTLY like this using Markdown:
+Format your response using Markdown:
 
 ### 📄 Answer from Document
-<Your strictly context-based answer here, or the data unavailable message>
+<Your answer based primarily on the documents. Use a professional, helpful tone.>
 
 ### 💡 Additional Explanation
-<Your general knowledge or helpful context here>
+<A very brief (max 2-3 sentences) general insight or tip related to the topic, clearly separated from document facts.>
 """
 
     response = bedrock.invoke_model(
@@ -111,8 +111,8 @@ Format your response EXACTLY like this using Markdown:
             "messages": [
                 {"role": "user", "content": prompt}
             ],
-            "max_tokens": 800, # Increased slightly to allow for formatting
-            "temperature": 0.1 # Keep this very low so it doesn't hallucinate answers
+            "max_tokens": 1000, 
+            "temperature": 0.3 # Slightly increased to 0.3 to allow for that "lenience" and better flow
         })
     )
 #     prompt = f"""
