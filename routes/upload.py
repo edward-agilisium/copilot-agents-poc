@@ -4,7 +4,8 @@ import json
 import httpx
 import boto3
 import io
-from fastapi import APIRouter, UploadFile, File
+import asyncio
+from fastapi import APIRouter, UploadFile, File, Request, BackgroundTasks, Response
 from dotenv import load_dotenv
 from azure.identity.aio import ClientSecretCredential
 from qdrant_client import QdrantClient
@@ -49,14 +50,11 @@ bedrock = session.client("bedrock-runtime", region_name="us-west-2")
 
 def create_embedding(text):
     body = json.dumps({"inputText": text})
-
     response = bedrock.invoke_model(
         modelId="amazon.titan-embed-text-v1",
         body=body
     )
-
     return json.loads(response["body"].read())["embedding"]
-
 
 async def get_token():
     cred = ClientSecretCredential(TENANT_ID, CLIENT_ID, CLIENT_SECRET)
@@ -64,51 +62,38 @@ async def get_token():
     await cred.close()
     return token.token
 
-
 # ==============================
 # SHAREPOINT LARGE FILE UPLOAD
 # ==============================
 
 async def upload_large_file(token, filename, file_bytes):
-
-    print("📡 Creating upload session...")
-
+    print(f"📡 Creating upload session for {filename}...")
     create_session_url = f"https://graph.microsoft.com/v1.0/drives/{DRIVE_ID}/root:/{filename}:/createUploadSession"
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
-
-    async with httpx.AsyncClient(timeout=httpx.Timeout(120.0)) as client:
+    async with httpx.AsyncClient(timeout=120.0) as client:
         session_res = await client.post(create_session_url, headers=headers)
+        session_res.raise_for_status()
 
     upload_url = session_res.json()["uploadUrl"]
-
-    print("🚀 Uploading in chunks...")
-
     chunk_size = 5 * 1024 * 1024  # 5MB
     file_size = len(file_bytes)
 
-    async with httpx.AsyncClient(timeout=httpx.Timeout(120.0)) as client:
-
+    print("🚀 Uploading in chunks...")
+    async with httpx.AsyncClient(timeout=120.0) as client:
         for start in range(0, file_size, chunk_size):
             end = min(start + chunk_size, file_size) - 1
             chunk = file_bytes[start:end + 1]
-
             headers = {
                 "Content-Length": str(len(chunk)),
                 "Content-Range": f"bytes {start}-{end}/{file_size}"
             }
-
             print(f"📦 Uploading bytes {start}-{end}")
-
             response = await client.put(upload_url, headers=headers, content=chunk)
+            response.raise_for_status()
 
     print("✅ Upload completed")
-
     return response.json()
-
 
 # ==============================
 # TEXT EXTRACTION
@@ -118,11 +103,9 @@ def extract_pdf_text(file_bytes):
     reader = PdfReader(io.BytesIO(file_bytes))
     return "".join([p.extract_text() or "" for p in reader.pages])
 
-
 def extract_docx_text(file_bytes):
     doc = Document(io.BytesIO(file_bytes))
     return "\n".join([p.text for p in doc.paragraphs if p.text])
-
 
 def extract_pptx_text(file_bytes):
     prs = Presentation(io.BytesIO(file_bytes))
@@ -133,38 +116,23 @@ def extract_pptx_text(file_bytes):
                 text.append(shape.text)
     return "\n".join(text)
 
-
 def chunk_text(text, size=500):
     return [text[i:i+size] for i in range(0, len(text), size)]
 
-
 # ==============================
-# ROUTE
+# CORE INGESTION ENGINE (NO LOOP)
 # ==============================
 
-@router.post("/upload")
-async def upload_file(file: UploadFile = File(...), uploaded_by: str = "unknown"):
-
-    file_bytes = await file.read()
-
-    file_type = file.filename.split(".")[-1].lower()
+async def process_file_for_qdrant(file_bytes: bytes, filename: str, sharepoint_url: str, uploaded_by: str):
+    """Handles everything AFTER the file is secured (DB, extraction, embedding)."""
+    file_type = filename.split(".")[-1].lower()
     print(f"📂 Processing file type: {file_type}")
 
-    # 1️⃣ Upload to SharePoint (chunked)
-    token = await get_token()
-    sp_response = await upload_large_file(token, file.filename, file_bytes)
-    sharepoint_url = sp_response.get("webUrl")
-
-    # 2️⃣ DB
     doc_id = str(uuid.uuid4())
-
-    insert_document(doc_id, file.filename, sharepoint_url, file_type)
-
+    insert_document(doc_id, filename, sharepoint_url, file_type)
     version = get_latest_version(doc_id) + 1
-
     insert_document_version(doc_id, version, uploaded_by, len(file_bytes))
 
-    # 3️⃣ Extract text
     if file_type == "pdf":
         text = extract_pdf_text(file_bytes)
     elif file_type == "docx":
@@ -172,7 +140,7 @@ async def upload_file(file: UploadFile = File(...), uploaded_by: str = "unknown"
     elif file_type == "pptx":
         text = extract_pptx_text(file_bytes)
     elif file_type in ["mp3", "wav", "m4a"]:
-        temp_audio_path = f"temp_{file.filename}"
+        temp_audio_path = f"temp_{filename}"
         with open(temp_audio_path, "wb") as f:
             f.write(file_bytes)
         try:
@@ -181,8 +149,8 @@ async def upload_file(file: UploadFile = File(...), uploaded_by: str = "unknown"
             if os.path.exists(temp_audio_path):
                 os.remove(temp_audio_path)
     elif file_type in ["mp4", "mkv", "avi", "mov"]:
-        temp_video_path = f"temp_{file.filename}"
-        temp_audio_path = f"temp_audio_{file.filename}.wav"
+        temp_video_path = f"temp_{filename}"
+        temp_audio_path = f"temp_audio_{filename}.wav"
         with open(temp_video_path, "wb") as f:
             f.write(file_bytes)
         try:
@@ -196,16 +164,12 @@ async def upload_file(file: UploadFile = File(...), uploaded_by: str = "unknown"
     else:
         return {"status": "error", "message": "Unsupported file type"}
 
-    # 4️⃣ Chunk
     chunks = chunk_text(text)[:50]
     print(f"📄 Total chunks: {len(chunks)}")
 
-    # 5️⃣ Embed + Store
     points = []
-
     for i, chunk in enumerate(chunks):
         embedding = create_embedding(chunk)
-
         points.append(
             PointStruct(
                 id=str(uuid.uuid4()),
@@ -213,7 +177,7 @@ async def upload_file(file: UploadFile = File(...), uploaded_by: str = "unknown"
                 payload={
                     "doc_id": doc_id,
                     "version": version,
-                    "file_name": file.filename,
+                    "file_name": filename,
                     "file_path": sharepoint_url,
                     "chunk_id": i,
                     "chunk_text": chunk
@@ -221,18 +185,168 @@ async def upload_file(file: UploadFile = File(...), uploaded_by: str = "unknown"
             )
         )
 
-    # Batch insert
     for i in range(0, len(points), 10):
         print(f"🚀 Inserting batch {i//10 + 1}")
+        qdrant.upsert(collection_name=COLLECTION_NAME, points=points[i:i+10])
 
-        qdrant.upsert(
-            collection_name=COLLECTION_NAME,
-            points=points[i:i+10]
-        )
+    return {"status": "success", "doc_id": doc_id, "chunks": len(points)}
 
-    return {
-        "status": "success",
-        "doc_id": doc_id,
-        "chunks": len(points),
-        "file_url": sharepoint_url
-    }
+# ==============================
+# MANUAL UPLOAD ROUTE
+# ==============================
+
+@router.post("/upload")
+async def upload_file(file: UploadFile = File(...), uploaded_by: str = "unknown"):
+    file_bytes = await file.read()
+
+    # 1️⃣ Upload to SharePoint (chunked)
+    token = await get_token()
+    sp_response = await upload_large_file(token, file.filename, file_bytes)
+    sharepoint_url = sp_response.get("webUrl")
+
+    # 2️⃣ Pass to core engine
+    result = await process_file_for_qdrant(file_bytes, file.filename, sharepoint_url, uploaded_by)
+    result["file_url"] = sharepoint_url
+    return result
+
+# ==============================
+# WEBHOOK LISTENER ROUTE (DELTA SYNC)
+# ==============================
+
+DELTA_TOKEN_FILE = "delta_token.txt"
+sync_lock = asyncio.Lock()
+
+async def sync_sharepoint_changes():
+    """Background task that safely queues and processes all new files."""
+    
+    # 1. Concurrency Lock
+    if sync_lock.locked():
+        print("⏳ Sync already in progress. New changes are queued...")
+        return
+        
+    async with sync_lock:
+        # Give SharePoint time to finish writing the file
+        await asyncio.sleep(5) 
+        
+        token = await get_token()
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        try:
+            # 2. State Management (The Bookmark)
+            if os.path.exists(DELTA_TOKEN_FILE):
+                with open(DELTA_TOKEN_FILE, 'r') as f:
+                    list_url = f.read().strip()
+            else:
+                print("🆕 [INITIALIZING] Calibrating Delta baseline...")
+                base_url = f"https://graph.microsoft.com/v1.0/drives/{DRIVE_ID}/root/delta?token=latest"
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    res = await client.get(base_url, headers=headers)
+                    res.raise_for_status()
+                    with open(DELTA_TOKEN_FILE, 'w') as f:
+                        f.write(res.json().get("@odata.deltaLink", base_url))
+                print("✅ [READY] Baseline established. Watching all folders...")
+                return
+
+            # 3. Fetching New Changes (Recursive by nature)
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                print("🔍 [SCANNING] Checking for new uploads across SharePoint...")
+                new_files = []
+                
+                while list_url:
+                    res = await client.get(list_url, headers=headers)
+                    res.raise_for_status()
+                    data = res.json()
+                    
+                    for item in data.get("value", []):
+                        # This catches files in ANY folder (root, astra, uploads, etc.)
+                        if "folder" not in item and "deleted" not in item and "file" in item:
+                            new_files.append(item)
+                    
+                    if "@odata.nextLink" in data:
+                        list_url = data["@odata.nextLink"]
+                    elif "@odata.deltaLink" in data:
+                        # Save bookmark for next time
+                        next_delta = data["@odata.deltaLink"]
+                        with open(DELTA_TOKEN_FILE, 'w') as f:
+                            f.write(next_delta)
+                        break
+                    else:
+                        break
+
+                if not new_files:
+                    print("🏁 [DONE] No new files to process.")
+                    return
+
+                # Sort oldest to newest
+                new_files.sort(key=lambda x: x.get("lastModifiedDateTime", ""))
+                print(f"📥 [BATCH] Found {len(new_files)} new file(s).")
+
+                # 4. Sequential Processing & Status Reporting
+                for file_item in new_files:
+                    filename = file_item.get("name", "Unknown File")
+                    webUrl = file_item.get("webUrl", "No URL")
+                    file_id = file_item.get("id")
+                    downloadUrl = file_item.get("@microsoft.graph.downloadUrl")
+                    
+                    # 1️⃣ LOG DETECTION IMMEDIATELY
+                    print(f"\n👀 [DETECTED] Change found in: {filename}")
+                    print(f"📂 Location: {webUrl}")
+                    
+                    # 2️⃣ AGGRESSIVE RE-FETCH: If URL is missing, ask for it specifically
+                    if not downloadUrl:
+                        print(f"🔗 [REFETCHING] URL missing in Delta. Asking API for fresh link...")
+                        async with httpx.AsyncClient(timeout=30.0) as fetch_client:
+                            item_res = await fetch_client.get(
+                                f"https://graph.microsoft.com/v1.0/drives/{DRIVE_ID}/items/{file_id}",
+                                headers=headers
+                            )
+                            if item_res.status_code == 200:
+                                downloadUrl = item_res.json().get("@microsoft.graph.downloadUrl")
+
+                    # 3️⃣ FINAL CHECK
+                    if not downloadUrl:
+                        print(f"ℹ️ [INFO] Metadata update only for {filename}. No content available yet.")
+                        continue
+                        
+                    print(f"🚀 [STARTING] Processing content for: {filename}...")
+                    
+                    try:
+                        # Use a dedicated client for the file download
+                        async with httpx.AsyncClient(timeout=120.0) as dl_client:
+                            file_res = await dl_client.get(downloadUrl)
+                            file_res.raise_for_status()
+                            file_bytes = file_res.content
+                        
+                        # Capture result from your core ingestion engine
+                        result = await process_file_for_qdrant(file_bytes, filename, webUrl, "SharePoint Webhook")
+                        
+                        if result and result.get("status") == "success":
+                            num_chunks = result.get('chunks', 0)
+                            if num_chunks > 0:
+                                print(f"✅ [SUCCESS] {filename} vectorized into {num_chunks} chunks.")
+                            else:
+                                print(f"⚠️ [EMPTY] {filename} vectorized but contained no text chunks.")
+                        else:
+                            msg = result.get("message") if result else "Unknown error"
+                            print(f"⚠️ [WARNING] {filename} processed with issues: {msg}")
+                            
+                    except Exception as e:
+                        print(f"❌ [ERROR] Could not vectorize {filename}. Error: {e}")
+                
+                print("\n🎉 [FINISHED] Delta Sync complete. Qdrant is up to date.")
+                
+        except Exception as e:
+            print(f"❌ [CRITICAL ERROR] Webhook processing failed: {str(e)}")
+
+
+@router.post("/webhook")
+async def sharepoint_webhook(request: Request, background_tasks: BackgroundTasks):
+    """Catches SharePoint events from any folder."""
+    if "validationToken" in request.query_params:
+        token = request.query_params.get("validationToken")
+        print(f"\n🤝 [HANDSHAKE] Microsoft is validating the endpoint...")
+        return Response(content=token, media_type="text/plain", status_code=200)
+
+    print("\n🔔 [PING] SharePoint change detected! Starting sync...")
+    background_tasks.add_task(sync_sharepoint_changes)
+    return Response(status_code=202)

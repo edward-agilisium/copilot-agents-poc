@@ -9,7 +9,7 @@ CLIENT_ID = "916271d2-fd1a-4d18-bae2-47e47c8bd374"
 CLIENT_SECRET = "a1f8Q~q0chgSmBgoquRnNwd6jTmyMtU5MWRqsdl2"
 
 # The Copilot-agent POC Drive ID we fetched earlier
-DRIVE_ID = "b!xg9rVrDtB06drKus5q1B18WpraEho8ZMlOdmBY4JmJsEBxinGmiTT6-BBfcF8FDy"
+DRIVE_ID = "b!ygJov5ls0kib7ngKA6TXAcWpraEho8ZMlOdmBY4JmJsEBxinGmiTT6-BBfcF8FDy"
 
 
 NGROK_URL = "https://kelly-noncadenced-phylis.ngrok-free.dev/webhook"
@@ -31,8 +31,7 @@ async def create_subscription():
         "changeType": "updated", # As we discovered, SharePoint Drives require 'updated'
         "notificationUrl": NGROK_URL, 
         "resource": f"/drives/{DRIVE_ID}/root",
-        "expirationDateTime": expiration,
-        "clientState": "CopilotAgentPOC-Active" 
+        "expirationDateTime": expiration
     }
 
     print(f"Sending subscription request to MS Graph for {NGROK_URL}...")
