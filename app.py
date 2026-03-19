@@ -441,13 +441,18 @@ def inject_custom_css():
     }
 
     /* ── CHAT INPUT ── */
-    [data-testid="stChatInput"] {
+    [data-testid="stChatInput"],
+    [data-testid="stBottom"] {
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
         padding: 0 !important;
     }
-    [data-testid="stChatInput"] > div {
+    [data-testid="stBottom"] > div {
+        background: transparent !important;
+    }
+    [data-testid="stChatInput"] > div,
+    [data-testid="stChatInput"] > div > div {
         background: #ffffff !important;
         border: 1px solid #e2e8f0 !important;
         border-radius: 28px !important;
@@ -456,14 +461,20 @@ def inject_custom_css():
         margin-top: 10px !important;
     }
     [data-testid="stChatInput"] textarea,
-    [data-testid="stChatInput"] input {
-        background: transparent !important;
+    [data-testid="stChatInput"] input,
+    [data-testid="stChatInput"] div[contenteditable] {
+        background: #ffffff !important;
         color: #1e293b !important;
         caret-color: #0f766e !important;
         padding-left: 12px !important;
         border: none !important;
+        -webkit-text-fill-color: #1e293b !important;
     }
     [data-testid="stChatInput"] textarea::placeholder { color: #94a3b8 !important; }
+    /* Ensure the chat input container bottom bar is light */
+    [data-testid="stBottomBlockContainer"] {
+        background: #f8fafc !important;
+    }
     [data-testid="stChatInput"] button {
         background: #0f766e !important;
         border-radius: 50% !important;
