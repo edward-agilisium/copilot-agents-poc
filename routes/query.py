@@ -34,7 +34,7 @@ def create_embedding(text):
     body = json.dumps({"inputText": text})
 
     response = bedrock.invoke_model(
-        modelId="amazon.titan-embed-text-v1",
+        modelId="amazon.titan-embed-text-v2:0",
         body=body
     )
 
@@ -106,7 +106,7 @@ Format your response using Markdown:
 """
 
     response = bedrock.invoke_model(
-        modelId="anthropic.claude-3-sonnet-20240229-v1:0",
+        modelId="us.anthropic.claude-haiku-4-5-20251001-v1:0",
         body=json.dumps({
             "anthropic_version": "bedrock-2023-05-31",
             "messages": [

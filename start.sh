@@ -59,6 +59,10 @@ for i in $(seq 1 30); do
     if [ -n "$TUNNEL_URL" ]; then
         echo -e " ${GREEN}OK${NC}"
         echo -e "       Tunnel URL: ${GREEN}${TUNNEL_URL}${NC}"
+
+        # ADD THIS LINE: Give Cloudflare's DNS 5 seconds to wake up globally
+        echo -e "       Waiting 5s for Cloudflare DNS propagation..."
+        sleep 5
         break
     fi
     echo -n "."
