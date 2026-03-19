@@ -920,6 +920,7 @@ with tab_library:
                             data = {"uploaded_by": "Streamlit User"}
                             resp = httpx.post(
                                 f"{API_URL}/upload",
+                                params={"folder_id": current_folder["id"]}, 
                                 data=data,
                                 files=files,
                                 timeout=120.0
