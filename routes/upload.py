@@ -52,7 +52,7 @@ bedrock = session.client("bedrock-runtime", region_name="us-west-2")
 def create_embedding(text):
     body = json.dumps({"inputText": text})
     response = bedrock.invoke_model(
-        modelId="amazon.titan-embed-text-v1",
+        modelId="amazon.titan-embed-text-v2:0",
         body=body
     )
     return json.loads(response["body"].read())["embedding"]
