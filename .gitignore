@@ -34,6 +34,7 @@ CLAUDE.md
 # Terraform
 deploy/terraform/.terraform/
 deploy/terraform/*.tfstate*
+deploy/terraform/tfplan
 deploy/terraform/.terraform.lock.hcl
 deploy/terraform/terraform.tfvars
 copilot-agent-key.pem
