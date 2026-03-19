@@ -11,7 +11,8 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-API_URL = "http://127.0.0.1:8000"
+import os
+API_URL = os.environ.get("API_URL", "http://127.0.0.1:8000")
 
 # — Preserved state keys (do not rename) —
 if "folder_history" not in st.session_state:

@@ -1,15 +1,6 @@
-import os
-from dotenv import load_dotenv
 from qdrant_client import QdrantClient
 from qdrant_client.models import VectorParams, Distance, PayloadSchemaType
-
-# -----------------------------
-# 1. CONFIG
-# -----------------------------
-load_dotenv()
-
-VDB_URL = os.getenv("VDB_URL")
-VDB_API = os.getenv("VDB_API")
+from config import VDB_URL, VDB_API
 
 COLLECTION_NAME = "CopilotAgentDocs"
 EMBEDDING_DIM = 1024  # ✅ Titan v2 dimension

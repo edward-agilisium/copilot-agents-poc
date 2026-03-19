@@ -1,13 +1,7 @@
-import os
 import httpx
 from fastapi import APIRouter, Query, HTTPException
 from azure.identity.aio import ClientSecretCredential
-
-# If adding to an existing file, you don't need to redefine these
-TENANT_ID = os.getenv("TENANT_ID")
-CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-DRIVE_ID = os.getenv("DRIVE_ID")
+from config import TENANT_ID, CLIENT_ID, CLIENT_SECRET, DRIVE_ID
 
 
 router = APIRouter()

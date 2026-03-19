@@ -4,19 +4,12 @@ import sys
 import httpx
 from datetime import datetime, timedelta, timezone
 from azure.identity.aio import ClientSecretCredential
-from dotenv import load_dotenv
+from config import TENANT_ID, CLIENT_ID, CLIENT_SECRET, DRIVE_ID
 
-load_dotenv()
-
-TENANT_ID = os.getenv("TENANT_ID")
-CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-DRIVE_ID = os.getenv("DRIVE_ID")
-
-# Accept tunnel URL from: (1) CLI argument, (2) env var, (3) error
-TUNNEL_URL = sys.argv[1] if len(sys.argv) > 1 else os.getenv("TUNNEL_URL")
+# Accept webhook URL from: (1) CLI argument, (2) env var, (3) error
+TUNNEL_URL = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("WEBHOOK_BASE_URL") or os.environ.get("TUNNEL_URL")
 if not TUNNEL_URL:
-    print("❌ No tunnel URL provided. Pass as argument or set TUNNEL_URL env var.")
+    print("❌ No webhook URL provided. Pass as argument or set WEBHOOK_BASE_URL env var.")
     sys.exit(1)
 
 # Ensure URL ends with /webhook path

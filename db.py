@@ -1,7 +1,9 @@
+import os
 import sqlite3
 from datetime import datetime
+from config import DATA_DIR
 
-DB_NAME = "CopilotAgentDocs.db"
+DB_NAME = os.path.join(DATA_DIR, "CopilotAgentDocs.db")
 
 
 # ==============================

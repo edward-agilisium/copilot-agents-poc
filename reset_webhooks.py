@@ -1,14 +1,7 @@
 import asyncio
-import os
 import httpx
 from azure.identity.aio import ClientSecretCredential
-from dotenv import load_dotenv
-
-load_dotenv()
-
-TENANT_ID = os.getenv("TENANT_ID")
-CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+from config import TENANT_ID, CLIENT_ID, CLIENT_SECRET
 
 async def clean_slates():
     print("Authenticating with Azure AD...")

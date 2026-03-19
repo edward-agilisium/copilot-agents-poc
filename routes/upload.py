@@ -2,11 +2,9 @@ import os
 import uuid
 import json
 import httpx
-import boto3
 import io
 import asyncio
 from fastapi import APIRouter, UploadFile, File, Request, BackgroundTasks, Response
-from dotenv import load_dotenv
 from azure.identity.aio import ClientSecretCredential
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct
@@ -14,6 +12,7 @@ from pypdf import PdfReader
 from docx import Document
 from pptx import Presentation
 from services.media_processor import extract_audio_from_video, transcribe_audio
+from config import TENANT_ID, CLIENT_ID, CLIENT_SECRET, DRIVE_ID, VDB_URL, VDB_API, bedrock, DATA_DIR
 
 from db import (
     insert_document,
@@ -23,27 +22,13 @@ from db import (
 
 router = APIRouter()
 
-load_dotenv()
-
-QDRANT_URL = os.getenv("VDB_URL")
-QDRANT_API = os.getenv("VDB_API")
-
-TENANT_ID = os.getenv("TENANT_ID")
-CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-DRIVE_ID = os.getenv("DRIVE_ID")
-
 COLLECTION_NAME = "CopilotAgentDocs"
 
 # ==============================
 # CLIENTS
 # ==============================
 
-qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API, timeout=60)
-
-AWS_PROFILE = os.getenv("AWS_PROFILE")
-session = boto3.Session(profile_name=AWS_PROFILE)
-bedrock = session.client("bedrock-runtime", region_name="us-west-2")
+qdrant = QdrantClient(url=VDB_URL, api_key=VDB_API, timeout=60)
 
 # ==============================
 # HELPERS
@@ -158,7 +143,7 @@ async def process_file_for_qdrant(file_bytes: bytes, filename: str, sharepoint_u
     elif file_type == "pptx":
         text = extract_pptx_text(file_bytes)
     elif file_type in ["mp3", "wav", "m4a"]:
-        temp_audio_path = f"temp_{filename}"
+        temp_audio_path = os.path.join(DATA_DIR, "tmp", f"temp_{filename}")
         with open(temp_audio_path, "wb") as f:
             f.write(file_bytes)
         try:
@@ -167,8 +152,8 @@ async def process_file_for_qdrant(file_bytes: bytes, filename: str, sharepoint_u
             if os.path.exists(temp_audio_path):
                 os.remove(temp_audio_path)
     elif file_type in ["mp4", "mkv", "avi", "mov"]:
-        temp_video_path = f"temp_{filename}"
-        temp_audio_path = f"temp_audio_{filename}.wav"
+        temp_video_path = os.path.join(DATA_DIR, "tmp", f"temp_{filename}")
+        temp_audio_path = os.path.join(DATA_DIR, "tmp", f"temp_audio_{filename}.wav")
         with open(temp_video_path, "wb") as f:
             f.write(file_bytes)
         try:
@@ -237,7 +222,7 @@ async def upload_file(file: UploadFile = File(...), folder_id: str = "root"):
 # WEBHOOK LISTENER ROUTE (DELTA SYNC)
 # ==============================
 
-DELTA_TOKEN_FILE = "delta_token.txt"
+DELTA_TOKEN_FILE = os.path.join(DATA_DIR, "delta_token.txt")
 sync_lock = asyncio.Lock()
 
 async def sync_sharepoint_changes():

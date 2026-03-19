@@ -1,0 +1,14 @@
+aws_region    = "us-west-2"
+instance_type = "t3.medium"
+my_ip         = "YOUR_IP/32"       # e.g. "203.0.113.10/32"
+repo_url      = "https://github.com/YOUR_ORG/copilot-agent.git"
+
+# Azure AD / SharePoint
+tenant_id     = ""
+client_id     = ""
+client_secret = ""
+drive_id      = ""
+
+# Qdrant Cloud
+vdb_url       = ""
+vdb_api       = ""

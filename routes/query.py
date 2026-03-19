@@ -1,34 +1,16 @@
-import os
 import json
-import boto3
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import List, Optional
-from dotenv import load_dotenv
 from qdrant_client import QdrantClient
 from services.qdrant_filters import build_qdrant_filter
+from config import VDB_URL, VDB_API, bedrock
 
 router = APIRouter()
 
-load_dotenv()
-
-QDRANT_URL = os.getenv("VDB_URL")
-QDRANT_API = os.getenv("VDB_API")
-
-qdrant = QdrantClient(
-    url=QDRANT_URL,
-    api_key=QDRANT_API
-)
+qdrant = QdrantClient(url=VDB_URL, api_key=VDB_API)
 
 COLLECTION_NAME = "CopilotAgentDocs"
-
-AWS_PROFILE = os.getenv("AWS_PROFILE")
-session = boto3.Session(profile_name=AWS_PROFILE)
-
-bedrock = session.client(
-    "bedrock-runtime",
-    region_name="us-west-2"
-)
 
 def create_embedding(text):
     body = json.dumps({"inputText": text})
