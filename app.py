@@ -41,20 +41,20 @@ def inject_custom_css():
 
     /* ── TEAL COLOR TOKENS ── */
     :root {
-        --teal-main:   #ececec;
-        --teal-dark:   #d4d4d4;
-        --teal-deeper: #ffffff;
-        --teal-light:  #2b2b2b;
-        --teal-bg:     #171717;
-        --slate:       #f8fafc;
-        --slate-mid:   #a3a3a3;
-        --slate-faint: #737373;
-        --white:       #1e1e1e;
-        --glass-bg:    rgba(33, 33, 33, 0.7);
-        --glass-border:rgba(66, 66, 66, 0.5);
-        --shadow-sm:   0 1px 3px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3);
-        --shadow-md:   0 4px 16px rgba(0,0,0,0.6), 0 2px 6px rgba(0,0,0,0.4);
-        --shadow-lg:   0 10px 40px rgba(0,0,0,0.8), 0 4px 12px rgba(0,0,0,0.5);
+        --teal-main:   #0f766e;
+        --teal-dark:   #0d9488;
+        --teal-deeper: #134e4a;
+        --teal-light:  #ccfbf1;
+        --teal-bg:     #f0fdfa;
+        --slate:       #1e293b;
+        --slate-mid:   #475569;
+        --slate-faint: #94a3b8;
+        --white:       #ffffff;
+        --glass-bg:    rgba(255, 255, 255, 0.75);
+        --glass-border:rgba(0, 0, 0, 0.08);
+        --shadow-sm:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+        --shadow-md:   0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+        --shadow-lg:   0 10px 40px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.06);
         --radius-sm:   8px;
         --radius-md:   14px;
         --radius-lg:   20px;
@@ -71,12 +71,12 @@ def inject_custom_css():
     .main .block-container,
     section[data-testid="stSidebarContent"] {
         background-color: transparent !important;
-        color: #ececec !important;
+        color: #1e293b !important;
     }
 
-    /* Force all generic text/labels/spans to be dark-on-light */
+    /* Force all generic text/labels/spans to dark text on light background */
     p, span, label, div, h1, h2, h3, h4, small, li, a {
-        color: #ececec !important;
+        color: #1e293b !important;
     }
 
     /* Sidebar specific text overrides */
@@ -85,10 +85,10 @@ def inject_custom_css():
     [data-testid="stSidebar"] label,
     [data-testid="stSidebar"] div,
     [data-testid="stSidebar"] small {
-        color: #d4d4d4 !important;
+        color: #475569 !important;
     }
 
-    /* Dark mode override */
+    /* Light mode form controls */
     [data-testid="stBaseButton-secondary"],
     [data-testid="stBaseButton-primary"],
     div[class*="stTextInput"] input,
@@ -100,9 +100,9 @@ def inject_custom_css():
     div[data-baseweb="textarea"],
     [data-testid="stFileUploadDropzone"],
     [data-testid="stFileUploadDropzone"] * {
-        background-color: #212121 !important;
-        color: #ececec !important;
-        border: 1px solid #424242 !important;
+        background-color: #ffffff !important;
+        color: #1e293b !important;
+        border: 1px solid #e2e8f0 !important;
     }
 
     /* ── HEADER OVERRIDE ── */
@@ -112,7 +112,7 @@ def inject_custom_css():
 
     /* ── MAIN BG ── */
     .stApp {
-        background: linear-gradient(135deg, #111111 0%, #171717 40%, #171717 100%) !important;
+        background: linear-gradient(135deg, #f8fafc 0%, #f0fdfa 40%, #f0f9ff 100%) !important;
     }
 
     .block-container {
@@ -123,11 +123,11 @@ def inject_custom_css():
 
     /* ── SIDEBAR ── */
     [data-testid="stSidebar"] {
-        background: #171717 !important;
+        background: #ffffff !important;
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         border-right: 1px solid var(--glass-border) !important;
-        box-shadow: 2px 0 24px rgba(0,0,0,0.07) !important;
+        box-shadow: 2px 0 24px rgba(0,0,0,0.04) !important;
     }
 
     [data-testid="stSidebar"] h2,
@@ -149,11 +149,11 @@ def inject_custom_css():
         opacity: 1 !important;
         visibility: visible !important;
         display: flex !important;
-        background: #212121 !important;
+        background: #ffffff !important;
         border-radius: 50% !important;
-        border: 2px solid #424242 !important;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
-        color: #ececec !important;
+        border: 2px solid #e2e8f0 !important;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important;
+        color: #475569 !important;
         min-width: 36px !important;
         min-height: 36px !important;
         align-items: center !important;
@@ -167,11 +167,11 @@ def inject_custom_css():
     [data-testid="collapsedControl"] button {
         opacity: 1 !important;
         background: transparent !important;
-        color: #ececec !important;
+        color: #475569 !important;
     }
     [data-testid="collapsedControl"] svg,
     [data-testid="collapsedControl"] button svg {
-        fill: #ececec !important;
+        fill: #475569 !important;
         opacity: 1 !important;
     }
 
@@ -180,19 +180,19 @@ def inject_custom_css():
     [data-testid="stSidebarCollapseButton"] button {
         opacity: 1 !important;
         visibility: visible !important;
-        color: #ececec !important;
-        background: rgba(0,0,0,0.08) !important;
+        color: #475569 !important;
+        background: rgba(0,0,0,0.04) !important;
         border-radius: 6px !important;
     }
     [data-testid="stSidebarCollapseButton"] svg {
-        fill: #ececec !important;
+        fill: #475569 !important;
         opacity: 1 !important;
     }
     /* Hover states */
     [data-testid="collapsedControl"]:hover,
     [data-testid="stSidebarCollapseButton"]:hover {
         background: #f0fdfa !important;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.4) !important;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.08) !important;
         opacity: 1 !important;
     }
 
@@ -221,7 +221,7 @@ def inject_custom_css():
 
     .stTabs [aria-selected="true"] {
         color: var(--teal-main) !important;
-        background: #2b2b2b !important;
+        background: #ffffff !important;
         box-shadow: var(--shadow-sm) !important;
         font-weight: 600 !important;
     }
@@ -233,37 +233,36 @@ def inject_custom_css():
     /* ── ALL BUTTONS (RESET) ── */
     div.stButton > button {
         border-radius: var(--radius-sm) !important;
-        border: 1px solid #424242 !important;
+        border: 1px solid #e2e8f0 !important;
         font-weight: 500 !important;
         transition: all 0.2s ease !important;
         box-shadow: none !important;
-        background-color: #2b2b2b !important;
-        color: #ececec !important;
+        background-color: #ffffff !important;
+        color: #475569 !important;
     }
     div.stButton > button p,
     div.stButton > button span {
-        color: #ececec !important;
+        color: #475569 !important;
     }
     div.stButton > button:hover {
-        background-color: #3b3b3b !important;
-        border-color: #525252 !important;
+        background-color: #f8fafc !important;
+        border-color: #cbd5e1 !important;
     }
     div.stButton > button:hover p,
     div.stButton > button:hover span {
-        color: #ffffff !important;
+        color: #1e293b !important;
     }
 
     /* ── FOLDER CARD BUTTONS ── */
     .folder-card-btn div.stButton > button {
         width: 100% !important;
         min-height: 100px !important;
-        background: #212121 !important;
+        background: #ffffff !important;
         border: 1px solid var(--glass-border) !important;
         border-radius: var(--radius-md) !important;
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
-
         justify-content: center !important;
         text-align: center !important;
         padding: 12px !important;
@@ -275,11 +274,11 @@ def inject_custom_css():
     }
 
     .folder-card-btn div.stButton > button:hover {
-        background: linear-gradient(135deg, rgba(0,0,0,0.08), rgba(0,0,0,0.05)) !important;
+        background: linear-gradient(135deg, rgba(240,253,250,0.8), rgba(240,249,255,0.5)) !important;
         border-color: var(--teal-main) !important;
         box-shadow: var(--shadow-md) !important;
         transform: translateY(-2px) !important;
-        color: var(--teal-deep) !important;
+        color: var(--teal-deeper) !important;
     }
 
     .folder-card-btn div.stButton > button p {
@@ -293,11 +292,11 @@ def inject_custom_css():
         border: none !important;
         border-radius: var(--radius-md) !important;
         font-weight: 600 !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+        box-shadow: 0 4px 12px rgba(15,118,110,0.25) !important;
         transition: all 0.25s ease !important;
     }
     .primary-btn div.stButton > button:hover {
-        box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+        box-shadow: 0 8px 24px rgba(15,118,110,0.35) !important;
         transform: translateY(-1px) !important;
     }
     .primary-btn div.stButton > button p { color: white !important; }
@@ -317,9 +316,9 @@ def inject_custom_css():
 
     /* ── SIDEBAR BACK BUTTON ── */
     .back-btn div.stButton > button {
-        background: rgba(0,0,0,0.08) !important;
+        background: rgba(15,118,110,0.06) !important;
         color: var(--teal-main) !important;
-        border: 1px solid rgba(0,0,0,0.2) !important;
+        border: 1px solid rgba(15,118,110,0.2) !important;
         border-radius: var(--radius-sm) !important;
         font-size: 0.82rem !important;
         padding: 4px 12px !important;
@@ -329,8 +328,8 @@ def inject_custom_css():
 
     /* ── FILE UPLOADER ── */
     [data-testid="stFileUploader"] {
-        background: #212121 !important;
-        border: 2px dashed #424242 !important;
+        background: #ffffff !important;
+        border: 2px dashed #cbd5e1 !important;
         border-radius: 14px !important;
         padding: 8px !important;
     }
@@ -340,15 +339,15 @@ def inject_custom_css():
     }
     /* The actual inner dropzone Streamlit renders */
     [data-testid="stFileUploadDropzone"] {
-        background: #ffffff !important;
+        background: #f8fafc !important;
         border-radius: 10px !important;
         border: none !important;
     }
-    /* Force every child element inside the dropzone to white */
+    /* Force every child element inside the dropzone */
     [data-testid="stFileUploadDropzone"],
     [data-testid="stFileUploadDropzone"] *:not(button):not(svg) {
-        background-color: #ffffff !important;
-        color: #d4d4d4 !important;
+        background-color: #f8fafc !important;
+        color: #475569 !important;
     }
     [data-testid="stFileUploadDropzone"] small,
     [data-testid="stFileUploadDropzone"] span,
@@ -357,8 +356,8 @@ def inject_custom_css():
     }
     [data-testid="stFileUploadDropzone"] button {
         background: #f0fdfa !important;
-        color: #ececec !important;
-        border: 1px solid #525252 !important;
+        color: #0f766e !important;
+        border: 1px solid #99f6e4 !important;
         border-radius: 8px !important;
         font-weight: 600 !important;
     }
@@ -376,10 +375,10 @@ def inject_custom_css():
         box-shadow: var(--shadow-sm) !important;
     }
     [data-testid="stExpander"] summary {
-        color: var(--teal-deep) !important;
+        color: var(--teal-deeper) !important;
         font-weight: 600 !important;
     }
-    [data-testid="stExpander"] summary p { color: var(--teal-deep) !important; }
+    [data-testid="stExpander"] summary p { color: var(--teal-deeper) !important; }
 
     /* ── MULTISELECT ── */
     .stMultiSelect label p { color: var(--slate-mid) !important; font-weight: 600 !important; }
@@ -389,9 +388,9 @@ def inject_custom_css():
         border-radius: var(--radius-sm) !important;
     }
     span[data-baseweb="tag"] {
-        background: linear-gradient(135deg, rgba(0,0,0,0.12), rgba(0,0,0,0.08)) !important;
+        background: linear-gradient(135deg, rgba(15,118,110,0.1), rgba(15,118,110,0.06)) !important;
         color: var(--teal-deeper) !important;
-        border: 1px solid rgba(0,0,0,0.25) !important;
+        border: 1px solid rgba(15,118,110,0.2) !important;
         border-radius: 6px !important;
     }
 
@@ -420,25 +419,25 @@ def inject_custom_css():
 
     [data-testid="stChatMessage"][data-testid*="user"],
     [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
-        background: #212121 !important;
+        background: #f0fdfa !important;
         border-radius: 12px !important;
         padding: 16px !important;
-        border: 1px solid #424242 !important;
+        border: 1px solid #ccfbf1 !important;
     }
 
     [data-testid="stChatMessage"] p { color: var(--slate) !important; line-height: 1.7 !important; }
     [data-testid="stChatMessage"] code {
         color: var(--teal-deeper) !important;
-        background: rgba(0,0,0,0.4) !important;
+        background: rgba(15,118,110,0.08) !important;
         border-radius: 4px !important;
         padding: 1px 5px !important;
     }
     [data-testid="stChatMessage"] a { color: var(--teal-main) !important; font-weight: 600 !important; }
 
     [data-testid="chatAvatarIcon-assistant"] {
-        background: linear-gradient(135deg, #171717, #212121) !important;
-        border: 1px solid #424242 !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+        background: linear-gradient(135deg, #0f766e, #0d9488) !important;
+        border: 1px solid #99f6e4 !important;
+        box-shadow: 0 2px 8px rgba(15,118,110,0.15) !important;
     }
 
     /* ── CHAT INPUT ── */
@@ -446,31 +445,31 @@ def inject_custom_css():
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
-        padding: 0 !important; 
+        padding: 0 !important;
     }
     [data-testid="stChatInput"] > div {
-        background: #212121 !important;
-        border: 1px solid #424242 !important;
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
         border-radius: 28px !important;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.4) !important;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.06) !important;
         padding-right: 12px !important;
         margin-top: 10px !important;
     }
     [data-testid="stChatInput"] textarea,
     [data-testid="stChatInput"] input {
         background: transparent !important;
-        color: #ececec !important;
-        caret-color: #ececec !important;
+        color: #1e293b !important;
+        caret-color: #0f766e !important;
         padding-left: 12px !important;
         border: none !important;
     }
-    [data-testid="stChatInput"] textarea::placeholder { color: #888888 !important; }
+    [data-testid="stChatInput"] textarea::placeholder { color: #94a3b8 !important; }
     [data-testid="stChatInput"] button {
-        background: #3b82f6 !important;
+        background: #0f766e !important;
         border-radius: 50% !important;
         width: 38px !important; height: 38px !important;
         border: none !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+        box-shadow: 0 2px 8px rgba(15,118,110,0.25) !important;
         display: flex !important; align-items: center !important; justify-content: center !important;
         margin-left: 8px !important;
     }
@@ -496,8 +495,8 @@ def inject_custom_css():
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background: linear-gradient(135deg, rgba(0,0,0,0.1), rgba(0,0,0,0.07));
-        border: 1px solid rgba(0,0,0,0.2);
+        background: linear-gradient(135deg, rgba(15,118,110,0.08), rgba(15,118,110,0.04));
+        border: 1px solid rgba(15,118,110,0.18);
         border-radius: 999px;
         padding: 3px 12px;
         font-size: 0.78rem;
@@ -543,15 +542,15 @@ def inject_custom_css():
         gap: 12px;
         padding: 11px 16px;
         background: var(--glass-bg);
-        border: 1px solid rgba(0,0,0,0.1);
+        border: 1px solid rgba(0,0,0,0.06);
         border-radius: var(--radius-sm);
         margin-bottom: 8px;
         transition: all 0.2s ease;
         cursor: default;
     }
     .file-row:hover {
-        background: rgba(0,0,0,0.04);
-        border-color: rgba(0,0,0,0.2);
+        background: rgba(240,253,250,0.8);
+        border-color: rgba(15,118,110,0.15);
         box-shadow: var(--shadow-sm);
     }
     .file-row .file-name {
@@ -564,7 +563,7 @@ def inject_custom_css():
         font-size: 0.72rem;
         font-weight: 600;
         text-transform: uppercase;
-        background: rgba(0,0,0,0.1);
+        background: rgba(15,118,110,0.08);
         color: var(--teal-deeper);
         border-radius: 4px;
         padding: 2px 7px;
@@ -577,17 +576,17 @@ def inject_custom_css():
     }
     .chat-empty-icon {
         width: 64px; height: 64px; border-radius: 16px;
-        background: #212121; border: 1px solid #424242;
+        background: linear-gradient(135deg, #0f766e, #0d9488); border: 1px solid #99f6e4;
         display: flex; align-items: center; justify-content: center;
-        font-size: 1.8rem; margin-bottom: 24px; color: #ececec !important;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        font-size: 1.8rem; margin-bottom: 24px; color: #ffffff !important;
+        box-shadow: 0 8px 32px rgba(15,118,110,0.2);
     }
     .chat-empty-title {
-        font-size: 1.5rem !important; font-weight: 600 !important; color: #ececec !important;
+        font-size: 1.5rem !important; font-weight: 600 !important; color: #1e293b !important;
         margin-bottom: 12px !important; letter-spacing: -0.02em !important;
     }
     .chat-empty-sub {
-        font-size: 0.95rem !important; color: #888888 !important; line-height: 1.6 !important;
+        font-size: 0.95rem !important; color: #64748b !important; line-height: 1.6 !important;
         max-width: 420px; margin: 0 auto !important;
     }
 
@@ -597,31 +596,31 @@ def inject_custom_css():
         max-width: 900px; margin: 0 auto 40px; padding: 0 20px;
     }
     .cap-card {
-        background: #171717; border: 1px solid #2b2b2b; border-radius: 12px;
+        background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px;
         padding: 20px; text-align: left; transition: all 0.2s ease;
     }
     .cap-card:hover {
-        background: #212121; border-color: #424242; box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        background: #f8fafc; border-color: #cbd5e1; box-shadow: 0 4px 16px rgba(0,0,0,0.06);
     }
     .cap-header {
         display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
     }
     .cap-icon {
-        background: #2b2b2b; border: 1px solid #424242; border-radius: 8px;
+        background: #f0fdfa; border: 1px solid #ccfbf1; border-radius: 8px;
         width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
-        font-size: 1rem; color: #ececec;
+        font-size: 1rem; color: #0f766e;
     }
     .cap-title {
-        font-size: 1rem !important; font-weight: 600 !important; color: #ececec !important;
+        font-size: 1rem !important; font-weight: 600 !important; color: #1e293b !important;
     }
     .cap-desc {
-        font-size: 0.85rem !important; color: #888888 !important; line-height: 1.5 !important;
+        font-size: 0.85rem !important; color: #64748b !important; line-height: 1.5 !important;
     }
 
     /* ── HEADER HERO BAR ── */
     .hero-bar {
-        background: linear-gradient(135deg, rgba(0,0,0,0.06), rgba(0,0,0,0.04));
-        border: 1px solid rgba(0,0,0,0.12);
+        background: linear-gradient(135deg, rgba(240,253,250,0.6), rgba(240,249,255,0.4));
+        border: 1px solid rgba(0,0,0,0.06);
         border-radius: var(--radius-lg);
         padding: 18px 28px;
         margin-bottom: 22px;
@@ -630,24 +629,24 @@ def inject_custom_css():
         justify-content: space-between;
     }
 
-    /* ── CHECKBOX STYLING (Force white when unticked, red when ticked) ── */
+    /* ── CHECKBOX STYLING ── */
     [data-testid="stCheckbox"] [data-baseweb="checkbox"] input + div {
-        background-color: #212121 !important;
-        border: 2px solid #525252 !important;
+        background-color: #ffffff !important;
+        border: 2px solid #cbd5e1 !important;
         border-radius: 4px !important;
         transition: all 0.2s ease;
     }
-    
-    /* When checked -> vibrant red */
+
+    /* When checked -> teal */
     [data-testid="stCheckbox"] [data-baseweb="checkbox"] input:checked + div {
-        background-color: #ececec !important;
-        border-color: #ececec !important;
+        background-color: #0f766e !important;
+        border-color: #0f766e !important;
     }
-    
+
     /* SVG Checkmark color */
     [data-testid="stCheckbox"] [data-baseweb="checkbox"] svg {
-        fill: #171717 !important;
-        color: #171717 !important;
+        fill: #ffffff !important;
+        color: #ffffff !important;
     }
 </style>
 """, unsafe_allow_html=True)
