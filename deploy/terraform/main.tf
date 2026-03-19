@@ -185,7 +185,9 @@ resource "aws_iam_role_policy" "bedrock_access" {
       Action = "bedrock:InvokeModel"
       Resource = [
         "arn:aws:bedrock:${var.aws_region}::foundation-model/amazon.titan-embed-text-v2:0",
-        "arn:aws:bedrock:us-*::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0"
+        "arn:aws:bedrock:us-*::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0",
+        "arn:aws:bedrock:${var.aws_region}:495688866359:inference-profile/us.anthropic.claude-haiku-4-5-20251001-v1:0",
+        "arn:aws:bedrock:${var.aws_region}:495688866359:inference-profile/us.*"
       ]
     }]
   })
